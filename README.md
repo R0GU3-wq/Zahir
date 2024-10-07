@@ -15,3 +15,4 @@
    ```bash
    git clone https://github.com/your-username/zahir.git
    cd zahir
+   pip install -r requirements.txt
