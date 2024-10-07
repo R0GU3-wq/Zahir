@@ -1,0 +1,7 @@
+openpyxl
+sqlite3
+argparse
+glob2
+gzip
+tkinter
+subprocess
