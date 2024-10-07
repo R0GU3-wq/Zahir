@@ -16,3 +16,6 @@
    git clone https://github.com/your-username/zahir.git
    cd zahir
    pip install -r requirements.txt
+
+
+![alt text](image.png)
