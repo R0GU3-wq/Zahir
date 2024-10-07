@@ -18,4 +18,4 @@
    pip install -r requirements.txt
 
 
-   ![alt text](image.png)
+![alt text](image.png)
