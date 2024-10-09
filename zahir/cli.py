@@ -2,8 +2,9 @@
 
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, Toplevel, Label
-from zahir import combine_and_export_data, recover_deleted_files, collect_and_analyze_logs, reconstruct_user_activity
+from zahir import combine_and_export_data, recover_deleted_files_from_usb, collect_and_analyze_logs, reconstruct_user_activity
 import os
+import subprocess
 
 class ZahirApp(tk.Tk):
     def __init__(self):
@@ -78,7 +79,7 @@ class ZahirApp(tk.Tk):
                     raise FileNotFoundError(f"Directory not found: {firefox_profile}")
                 
                 combine_and_export_data(firefox_profile, output_dir)
-                self.themed_messagebox("Success", f"Browser history extracted successfully and saved to {output_dir}/output.json.")
+                self.themed_messagebox("Success", f"Browser history extracted successfully and saved to {output_dir}/firefox_artifacts.xlsx.")
             except Exception as e:
                 self.themed_messagebox("Error", f"Failed to extract browser history: {e}", box_type="error")
 
@@ -88,12 +89,25 @@ class ZahirApp(tk.Tk):
 
         mount_point = filedialog.askdirectory(title="Select Mount Point of Partition")
         output_dir = filedialog.askdirectory(title="Select Output Directory")
+
         if mount_point and output_dir:
-            try:
-                recover_deleted_files(mount_point, output_dir)
-                self.themed_messagebox("Success", f"Deleted files recovered. Output saved to {output_dir}.")
-            except Exception as e:
-                self.themed_messagebox("Error", f"Failed to recover deleted files: {e}", box_type="error")
+           # Use simpledialog.askstring instead of filedialog.askstring
+           device = simpledialog.askstring("Input", "Please enter the device path (e.g., /dev/sdb1):")
+        
+           if device:
+              try:
+                  # Ensure the device and output directory are valid and run the recovery process
+                  recover_deleted_files_from_usb(mount_point, output_dir, device)
+                  self.themed_messagebox("Success", f"Deleted files recovered. Output saved to {output_dir}.")
+              except subprocess.CalledProcessError as e:
+                  self.themed_messagebox("Error", f"Error during recovery: {e}", box_type="error")
+              except Exception as e:
+                  self.themed_messagebox("Error", f"Failed to recover deleted files: {e}", box_type="error")
+           else:
+              self.themed_messagebox("Error", "No device path provided.", box_type="error")
+        else:
+           self.themed_messagebox("Error", "Mount point or output directory not selected.", box_type="error")
+
 
     def analyze_logs(self):
         msg_box = self.themed_messagebox("Information", "Please select the output directory for the logs.")

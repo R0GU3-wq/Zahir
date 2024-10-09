@@ -127,27 +127,39 @@ def combine_and_export_data(profile_path, output_dir):
     print(f"Data extraction complete. Results saved to {output_file}.")
     
 #-----------------------------------------recovery-section------------------------------------
-    
-def recover_deleted_files(mount_point, output_dir):
-    print(f"Recovering deleted files from {mount_point}...")
 
-    # Ensure output directory exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    # Change to the output directory before running extundelete
+def recover_deleted_files_from_usb(mount_point, output_dir, device):
     try:
-        os.chdir(output_dir)
-        command = ["sudo", "extundelete", "--restore-all", mount_point]
+        # Check if the device is mounted
+        mount_check = subprocess.run(["mount"], capture_output=True, text=True)
+        if device in mount_check.stdout:
+            # Unmount the device if it is mounted
+            subprocess.run(["sudo", "umount", device], check=True)
+            print(f"Device {device} unmounted successfully.")
+        else:
+            print(f"Device {device} is not mounted, proceeding with recovery.")
+        
+        # Scan the device to list deleted files
+        print("Scanning for deleted files...")
+        scan_result = subprocess.run(["sudo", "ntfsundelete", device, "--scan"], check=True, capture_output=True, text=True)
+        print(scan_result.stdout)  # Show the scan result to the user
+
+        # Prompt the user for the inode of the file(s) to recover
+        inodes = input("Enter the inode(s) of the file(s) to recover, separated by commas: ")
+        if not inodes:
+            raise Exception("No inodes provided, unable to recover files.")
+        
+        # Recover the specified inodes
+        command = ["sudo", "ntfsundelete", device, "--undelete", "--inodes", inodes, "--destination", output_dir]
         subprocess.run(command, check=True)
         print(f"Deleted files recovered successfully. Check {output_dir} for recovered files.")
+        
     except subprocess.CalledProcessError as e:
         print(f"Error during recovery: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
-    finally:
-        # Change back to the original directory
-        os.chdir('..')
+
+
 
 #--------------------------------------------logs-section-------------------------------------
 def collect_and_analyze_logs(output_dir):
